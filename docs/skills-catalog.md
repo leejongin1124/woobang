@@ -1,7 +1,6 @@
-# Claude 스킬 카탈로그 (21~100번, 80개)
+# Claude 스킬 카탈로그 (1~100번, 100개)
 
-> 출처: 사용자가 준 인쇄물 사진 4장(2026-10-27). 목록 자체는 "2026년 10월 26일 기준"으로 적혀 있다.
-> **1~20번은 사진에 없어서 빠져 있다.**
+> 출처: 사용자가 준 인쇄물 사진 5장(2026-10-27). 목록 자체는 "2026년 10월 26일 기준"으로 적혀 있다.
 > 사진을 보고 받아 적은 것이라 명령어에 오타가 있을 수 있다. 설치하기 전에 원본 README와 대조할 것.
 > 별 개수(★)는 GitHub 스타 수다.
 
@@ -18,6 +17,31 @@
 사용자가 어떤 작업을 요청했을 때, 아래 "이런 일을 해요" 열에서 맞는 스킬을 찾아 이름과 설치 명령을 제안한다. 설치는 사용자가 확인한 뒤에만 한다.
 
 ---
+
+## 💻 개발 (1~20)
+
+| # | 스킬 | 이런 일을 해요 | 이렇게 말해 보세요 | 만든 곳 · ★ | 설치 명령어 |
+|---|---|---|---|---|---|
+| 1 | systematic-debugging | 버그 원인을 단계별로 추적해 근본 원인부터 고친다 | "로그인 오류 원인부터 차근차근 찾아줘" | obra · 30.5만 | `/plugin install superpowers@claude-plugins-official` |
+| 2 | brainstorming | 만들기 전에 질문으로 요구사항과 설계를 정리한다 | "사내 신청 폼 만들기 전에 같이 기획하자" | obra · 30.5만 | `/plugin install superpowers@claude-plugins-official` |
+| 3 | grill-me | 계획의 빈틈을 집요한 질문으로 찾아 준다 | "내 신규 기능 기획안 날카롭게 검증해줘" | mattpocock · 30.4만 | `npx skills@latest add mattpocock/skills --skill grill-me` |
+| 4 | test-driven-development | 테스트를 먼저 쓰고 코드를 짜게 이끌어 준다 | "결제 금액 계산 함수 TDD로 만들어줘" | obra · 30.5만 | `/plugin install superpowers@claude-plugins-official` |
+| 5 | webapp-testing | 내 웹앱을 브라우저로 열어 동작을 테스트한다 | "로컬 웹페이지 회원가입 흐름 테스트해줘" | Anthropic 공식 · 18.4만 | `/plugin marketplace add anthropics/skills` → `/plugin install example-skills@anthropic-agent-skills` |
+| 6 | review | 머지 전 PR을 시니어처럼 꼼꼼히 리뷰한다 | "이 브랜치 머지 전에 리뷰해줘" | garrytan · 13.8만 | `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` |
+| 7 | qa | 앱을 직접 써 보며 버그를 찾고 고친다 | "스테이징 사이트 QA하고 버그 고쳐줘" | garrytan · 13.8만 | `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` |
+| 8 | spec-driven-development | 코딩 전에 명세서부터 써서 방향을 잡는다 | "새 대시보드 기능 명세부터 잡아줘" | addyosmani · 11.1만 | `/plugin marketplace add addyosmani/agent-skills` → `/plugin install agent-skills@addy-agent-skills` |
+| 9 | code-review | CodeRabbit으로 코드 리뷰를 돌리고 해석한다 | "CodeRabbit으로 내 변경사항 리뷰해줘" | CodeRabbit 공식 · 198 | `npx skills add coderabbitai/skills --skill code-review` |
+| 10 | find-bugs | 변경 코드에서 버그와 보안 문제를 찾는다 | "이번 변경에 버그나 보안 구멍 있나 봐줘" | Sentry 공식 · 1,090 | `claude plugin marketplace add getsentry/skills` → `claude plugin install sentry-skills@sentry-skills` |
+| 11 | commit | 변경 내용에 맞는 커밋 메시지를 써 준다 | "지금 변경사항 커밋 메시지 써줘" | Sentry 공식 · 1,090 | `claude plugin marketplace add getsentry/skills` → `claude plugin install sentry-skills@sentry-skills` |
+| 12 | pr-writer | 리뷰어가 읽기 쉬운 PR 제목과 설명을 쓴다 | "이 브랜치 PR 설명 작성해줘" | Sentry 공식 · 1,090 | `claude plugin marketplace add getsentry/skills` → `claude plugin install sentry-skills@sentry-skills` |
+| 13 | stripe-best-practices | 결제 기능을 스트라이프 공식 방식대로 만든다 | "구독 결제 페이지를 스트라이프로 붙여줘" | Stripe 공식 · 1,972 | `claude plugin install stripe@claude-plugins-official` |
+| 14 | writing-plans | 요구사항을 단계별 구현 계획으로 쪼갠다 | "이 요구사항으로 구현 계획 세워줘" | obra · 30.5만 | `/plugin install superpowers@claude-plugins-official` |
+| 15 | ship | 테스트·리뷰·PR 생성까지 배포 준비를 한 번에 | "이 기능 테스트 돌리고 PR까지 올려줘" | garrytan · 13.8만 | `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` |
+| 16 | deploy-to-vercel | 만든 웹사이트를 Vercel에 바로 배포한다 | "이 랜딩페이지 Vercel에 배포해줘" | Vercel 공식 · 3.3만 | `npx skills add vercel-labs/agent-skills --skill deploy-to-vercel` |
+| 17 | vercel-react-best-practices | React·Next.js 성능 개선 지침을 적용한다 | "이 Next.js 페이지 느린 부분 개선해줘" | Vercel 공식 · 3.3만 | `npx skills add vercel-labs/agent-skills --skill vercel-react-best-practices` |
+| 18 | supabase | Supabase DB·인증 작업을 올바르게 하도록 돕는다 | "Supabase로 회원 테이블과 로그인 만들어줘" | Supabase 공식 · 2,934 | `npx skills add supabase/agent-skills --skill supabase` |
+| 19 | mcp-builder | 사내 API를 Claude에 연결할 MCP 서버를 만든다 | "우리 사내 API용 MCP 서버 만들어줘" | Anthropic 공식 · 18.4만 | `/plugin marketplace add anthropics/skills` → `/plugin install example-skills@anthropic-agent-skills` |
+| 20 | cloudflare | Cloudflare 제품 선택과 배포를 안내한다 | "이 앱 Cloudflare에 올리는 방법 알려줘" | Cloudflare 공식 · 3,174 | `npx skills add https://github.com/cloudflare/skills --skill cloudflare` |
 
 ## 🎨 디자인 (21~40)
 
