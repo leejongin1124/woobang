@@ -309,7 +309,7 @@ End Function
 
 ' 제목줄의 "(총 18건)" 을 나뉜 건수로 고친다
 Private Sub UpdateTitleCount(ByVal sh As Worksheet, ByVal hdrRow As Long, ByVal cnt As Long)
-    Dim r As Long, c As Long, lastCol As Long, s As String, p As Long, q As Long, mid_ As String
+    Dim r As Long, c As Long, lastCol As Long, s As String, p As Long, q As Long, numTxt As String
     lastCol = sh.UsedRange.Column + sh.UsedRange.Columns.Count - 1
     For r = 1 To hdrRow - 1
         For c = 1 To lastCol
@@ -318,8 +318,8 @@ Private Sub UpdateTitleCount(ByVal sh As Worksheet, ByVal hdrRow As Long, ByVal 
             If p > 0 Then
                 q = InStr(p + 1, s, "건")
                 If q > p + 1 Then
-                    mid_ = Trim$(Replace(Mid$(s, p + 1, q - p - 1), ",", ""))
-                    If mid_ <> "" And IsNumeric(mid_) Then
+                    numTxt = Trim$(Replace(Mid$(s, p + 1, q - p - 1), ",", ""))
+                    If numTxt <> "" And IsNumeric(numTxt) Then
                         sh.Cells(r, c).Value = Left$(s, p) & " " & cnt & Mid$(s, q)
                         Exit Sub
                     End If
@@ -397,12 +397,15 @@ End Sub
 ' allClear = False : 불러오기 전에 자동 입력칸과 새출발/일반 행의 입력칸만 지운다
 ' allClear = True  : 초기화. 중도완제, 입금일자까지 모두 지운다 (수수료율은 남김)
 Private Sub ClearCells(ByVal ws As Worksheet, ByVal allClear As Boolean)
+    Dim r As Long
     ws.Range("D3").ClearContents
-    ws.Range("F3").ClearContents
+    ws.Range("F3").MergeArea.ClearContents
     ws.Range(ws.Cells(R_NEW, C_AMT), ws.Cells(R_GEN, C_ERP)).ClearContents
     ws.Range(ws.Cells(R_NEW, C_BANK), ws.Cells(R_GEN, C_BANK)).ClearContents
     ws.Range(ws.Cells(R_NEW, C_CNT), ws.Cells(R_GEN, C_CNT)).ClearContents
-    ws.Range(ws.Cells(R_FILE_NEW, 2), ws.Cells(R_NOTE, 2)).ClearContents
+    For r = R_FILE_NEW To R_NOTE
+        ws.Cells(r, 2).MergeArea.ClearContents    ' 병합 칸은 전체 범위로 지워야 오류가 안 난다
+    Next
     If allClear Then
         ws.Range("B3").ClearContents
         ws.Cells(R_MID, C_AMT).ClearContents
@@ -571,9 +574,7 @@ Public Sub SetupWorkbook()
     ws.Columns("K").ColumnWidth = 3
     ws.Columns("L").ColumnWidth = 26
 
-    AddButton ws, "L3", "1. 파일 불러오기 / 분류", "LoadAndSplit", 34
-    AddButton ws, "L6", "초기화", "ResetAll", 26
-    AddButton ws, "L8", "계산표 인쇄", "PrintCalc", 26
+    AddButtons ws
 
     On Error Resume Next
     With ws.PageSetup
@@ -626,26 +627,63 @@ Public Sub SetupWorkbook()
     Application.ScreenUpdating = True
     ws.Activate
     MsgBox "설치가 끝났습니다." & vbLf & vbLf & _
-           "F12 > 파일 형식 'Excel 매크로 사용 통합 문서(*.xlsm)'로 저장하세요.", vbInformation, "설치 완료"
+           "Ctrl+S 로 저장하세요. (파일 형식: Excel 매크로 사용 통합 문서 *.xlsm)", vbInformation, "설치 완료"
+End Sub
+
+
+' 파일을 열 때 엑셀이 저절로 실행한다. 계산 시트나 버튼이 없으면 만든다.
+Public Sub Auto_Open()
+    Dim ws As Worksheet, cnt As Long
+    Set ws = FindSheet(CALC_SHEET)
+    If ws Is Nothing Then
+        SetupWorkbook
+        Exit Sub
+    End If
+    On Error Resume Next
+    cnt = ws.Buttons.Count
+    On Error GoTo 0
+    If cnt = 0 Then
+        ws.Unprotect
+        AddButtons ws
+        ws.Protect
+    End If
+    ws.Activate
+End Sub
+
+
+Private Sub AddButtons(ByVal ws As Worksheet)
+    AddButton ws, "L3", "1. 파일 불러오기 / 분류", "LoadAndSplit", 34
+    AddButton ws, "L6", "초기화", "ResetAll", 26
+    AddButton ws, "L8", "계산표 인쇄", "PrintCalc", 26
 End Sub
 
 
 ' ===== 작은 도구들 =====
 Private Function CalcSheet() As Worksheet
-    On Error Resume Next
-    Set CalcSheet = ThisWorkbook.Worksheets(CALC_SHEET)
-    On Error GoTo 0
-    If CalcSheet Is Nothing Then MsgBox "먼저 SetupWorkbook 을 실행하세요.", vbExclamation
+    Dim ws As Worksheet
+    Set ws = FindSheet(CALC_SHEET)
+    If ws Is Nothing Then MsgBox "계산 시트가 없습니다. 파일을 닫았다가 다시 열어 [콘텐츠 사용]을 누르세요.", vbExclamation
+    Set CalcSheet = ws
+End Function
+
+Private Function FindSheet(ByVal nm As String) As Worksheet
+    Dim s As Worksheet
+    For Each s In ThisWorkbook.Worksheets
+        If s.Name = nm Then
+            Set FindSheet = s
+            Exit Function
+        End If
+    Next
 End Function
 
 Private Function GetOrAddSheet(ByVal nm As String) As Worksheet
-    On Error Resume Next
-    Set GetOrAddSheet = ThisWorkbook.Worksheets(nm)
-    On Error GoTo 0
-    If GetOrAddSheet Is Nothing Then
-        Set GetOrAddSheet = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
-        GetOrAddSheet.Name = nm
+    Dim ws As Worksheet
+    Set ws = FindSheet(nm)
+    If ws Is Nothing Then
+        Set ws = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+        ws.Name = nm
     End If
+    Set GetOrAddSheet = ws
 End Function
 
 Private Sub AddButton(ByVal ws As Worksheet, ByVal anchor As String, ByVal caption As String, _
@@ -738,8 +776,10 @@ Private Function DateKey(ByVal v As Variant) As String
 End Function
 
 Private Function LastSep(ByVal p As String) As Long
-    LastSep = InStrRev(p, "\")
-    If InStrRev(p, "/") > LastSep Then LastSep = InStrRev(p, "/")
+    Dim i As Long
+    i = InStrRev(p, "\")
+    If InStrRev(p, "/") > i Then i = InStrRev(p, "/")
+    LastSep = i
 End Function
 
 Private Function FileExists(ByVal p As String) As Boolean

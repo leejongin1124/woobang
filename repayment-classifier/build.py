@@ -34,6 +34,20 @@ clash = sorted(n for n in declared if n.lower() in BUILTIN_SET)
 if clash:
     sys.exit("VBA 내장 이름과 겹치는 이름: " + ", ".join(clash))
 
+# 함수 안에서 자기 이름을 읽으면 엑셀은 자기 호출로 보고 오류를 낸다. 돌려줄 값에 넣는 것만 허용한다.
+self_reads = []
+for m in re.finditer(r"Function\s+(\w+)\s*\(.*?\n(.*?)\nEnd Function", text, re.S):
+    name, body = m.group(1), m.group(2)
+    for line in body.splitlines():
+        code = re.sub(r'"[^"]*"', '""', line.split("'", 1)[0])
+        code = re.sub(rf"^\s*(Set\s+)?{name}\s*=", "", code)
+        code = re.sub(rf"\bThen\s+(Set\s+)?{name}\s*=", "Then ", code)
+        code = re.sub(rf"(:\s*)(Set\s+)?{name}\s*=", r"\1", code)
+        if re.search(rf"\b{name}\b", code):
+            self_reads.append(f"{name}: {line.strip()}")
+if self_reads:
+    sys.exit("함수가 자기 이름을 읽음:\n  " + "\n  ".join(self_reads))
+
 out = text.replace("\r\n", "\n").replace("\n", "\r\n")
 (here / "변제금분류기.bas").write_bytes(out.encode("cp949"))
 print(f"built 변제금분류기.bas (이름 {len(declared)}개 검사)")
