@@ -116,7 +116,7 @@ End Sub
 Public Function ProcessFile(ByVal srcPath As String, ByVal overwrite As Boolean) As String
     Dim src As Workbook, sh As Worksheet
     Dim shIdx As Long, hdrRow As Long, lastRow As Long, lastCol As Long
-    Dim cNo As Long, cType As Long, cDate As Long, cPrin As Long, cInt As Long, cEtc As Long, cSum As Long
+    Dim colNo As Long, colType As Long, colDate As Long, colPrin As Long, colInt As Long, colEtc As Long, colSum As Long
     Dim r As Long, n As Long, k As Long, ok As Boolean, v As Double, tot As Double
     Dim rowNums() As Long, isNew() As Boolean
     Dim kindNames() As String, kindCnt() As Long, kindIsNew() As Boolean, kindN As Long
@@ -138,7 +138,7 @@ Public Function ProcessFile(ByVal srcPath As String, ByVal overwrite As Boolean)
 
     For shIdx = 1 To src.Worksheets.Count
         Set sh = src.Worksheets(shIdx)
-        hdrRow = FindHeaderRow(sh, cType)
+        hdrRow = FindHeaderRow(sh, colType)
         If hdrRow > 0 Then Exit For
     Next
     If hdrRow = 0 Then
@@ -149,16 +149,16 @@ Public Function ProcessFile(ByVal srcPath As String, ByVal overwrite As Boolean)
 
     lastRow = sh.UsedRange.Row + sh.UsedRange.Rows.Count - 1
     lastCol = sh.UsedRange.Column + sh.UsedRange.Columns.Count - 1
-    If lastCol < cType Then lastCol = cType
+    If lastCol < colType Then lastCol = colType
 
-    cSum = FindCol(sh, hdrRow, lastCol, "합계")
-    cNo = FindCol(sh, hdrRow, lastCol, "NO.")
-    If cNo = 0 Then cNo = FindCol(sh, hdrRow, lastCol, "NO")
-    cDate = FindCol(sh, hdrRow, lastCol, "처리일자")
-    cPrin = FindCol(sh, hdrRow, lastCol, "원금")
-    cInt = FindCol(sh, hdrRow, lastCol, "이자")
-    cEtc = FindCol(sh, hdrRow, lastCol, "기타채무")
-    If cSum = 0 Then
+    colSum = FindCol(sh, hdrRow, lastCol, "합계")
+    colNo = FindCol(sh, hdrRow, lastCol, "NO.")
+    If colNo = 0 Then colNo = FindCol(sh, hdrRow, lastCol, "NO")
+    colDate = FindCol(sh, hdrRow, lastCol, "처리일자")
+    colPrin = FindCol(sh, hdrRow, lastCol, "원금")
+    colInt = FindCol(sh, hdrRow, lastCol, "이자")
+    colEtc = FindCol(sh, hdrRow, lastCol, "기타채무")
+    If colSum = 0 Then
         src.Close SaveChanges:=False
         ProcessFile = "'합계' 제목칸을 찾지 못했습니다." & vbLf & "변제금상환내역조회 원본 파일이 맞는지 확인하세요."
         Exit Function
@@ -166,8 +166,8 @@ Public Function ProcessFile(ByVal srcPath As String, ByVal overwrite As Boolean)
 
     ' 지원구분이 있고 합계가 숫자인 행만 상환 내역으로 본다
     For r = hdrRow + 1 To lastRow
-        kind = CellText(sh.Cells(r, cType))
-        v = ToNum(sh.Cells(r, cSum).Value, ok)
+        kind = CellText(sh.Cells(r, colType))
+        v = ToNum(sh.Cells(r, colSum).Value, ok)
         If kind <> "" And ok Then
             n = n + 1
             ReDim Preserve rowNums(1 To n)
@@ -195,14 +195,14 @@ Public Function ProcessFile(ByVal srcPath As String, ByVal overwrite As Boolean)
             End If
             kindCnt(k) = kindCnt(k) + 1
 
-            If cPrin > 0 And cInt > 0 And cEtc > 0 Then
-                tot = ToNum(sh.Cells(r, cPrin).Value, ok) + ToNum(sh.Cells(r, cInt).Value, ok) _
-                    + ToNum(sh.Cells(r, cEtc).Value, ok)
+            If colPrin > 0 And colInt > 0 And colEtc > 0 Then
+                tot = ToNum(sh.Cells(r, colPrin).Value, ok) + ToNum(sh.Cells(r, colInt).Value, ok) _
+                    + ToNum(sh.Cells(r, colEtc).Value, ok)
                 If Abs(tot - v) > 0.5 Then mismatch = mismatch & " " & r & "행"
             End If
 
-            If cDate > 0 Then
-                d = DateKey(sh.Cells(r, cDate).Value)
+            If colDate > 0 Then
+                d = DateKey(sh.Cells(r, colDate).Value)
                 If ymd = "" Then
                     ymd = d
                 ElseIf d <> "" And d <> ymd And InStr(otherDates, d) = 0 Then
@@ -242,11 +242,11 @@ Public Function ProcessFile(ByVal srcPath As String, ByVal overwrite As Boolean)
     End If
 
     If mCntNew > 0 Then
-        res = MakeOutput(srcPath, mPathNew, shIdx, hdrRow, cNo, cType, cSum, rowNums, isNew, False, mCntNew)
+        res = MakeOutput(srcPath, mPathNew, shIdx, hdrRow, colNo, colType, colSum, rowNums, isNew, False, mCntNew)
         If res <> "" Then ProcessFile = res: Exit Function
     End If
     If mCntGen > 0 Then
-        res = MakeOutput(srcPath, mPathGen, shIdx, hdrRow, cNo, cType, cSum, rowNums, isNew, True, mCntGen)
+        res = MakeOutput(srcPath, mPathGen, shIdx, hdrRow, colNo, colType, colSum, rowNums, isNew, True, mCntGen)
         If res <> "" Then ProcessFile = res: Exit Function
     End If
     Exit Function
@@ -264,7 +264,7 @@ End Function
 ' 원본을 복사한 뒤 반대쪽 행을 지워 결과 파일을 만든다. 서식과 제목줄은 원본 그대로 둔다.
 ' dropNew = True 이면 새출발 행을, False 이면 일반 행을 지운다.
 Private Function MakeOutput(ByVal srcPath As String, ByVal outPath As String, ByVal shIdx As Long, _
-        ByVal hdrRow As Long, ByVal cNo As Long, ByVal cType As Long, ByVal cSum As Long, _
+        ByVal hdrRow As Long, ByVal colNo As Long, ByVal colType As Long, ByVal colSum As Long, _
         ByRef rowNums() As Long, ByRef isNew() As Boolean, ByVal dropNew As Boolean, ByVal keepCnt As Long) As String
     Dim wb As Workbook, sh As Worksheet
     Dim i As Long, r As Long, lastRow As Long, ok As Boolean
@@ -281,15 +281,15 @@ Private Function MakeOutput(ByVal srcPath As String, ByVal outPath As String, By
     Next
 
     ' No. 를 1부터 다시 매긴다
-    If cNo > 0 Then
+    If colNo > 0 Then
         i = 0
         lastRow = sh.UsedRange.Row + sh.UsedRange.Rows.Count - 1
         For r = hdrRow + 1 To lastRow
-            ToNum sh.Cells(r, cSum).Value, ok
-            If ok And CellText(sh.Cells(r, cType)) <> "" Then
+            ToNum sh.Cells(r, colSum).Value, ok
+            If ok And CellText(sh.Cells(r, colType)) <> "" Then
                 i = i + 1
-                ToNum sh.Cells(r, cNo).Value, ok
-                If ok Then sh.Cells(r, cNo).Value = i
+                ToNum sh.Cells(r, colNo).Value, ok
+                If ok Then sh.Cells(r, colNo).Value = i
             End If
         Next
     End If
@@ -331,14 +331,14 @@ End Sub
 
 
 ' "지원구분" 제목칸이 있는 행을 찾는다
-Private Function FindHeaderRow(ByVal sh As Worksheet, ByRef cType As Long) As Long
+Private Function FindHeaderRow(ByVal sh As Worksheet, ByRef colType As Long) As Long
     Dim r As Long, c As Long, lastCol As Long
     lastCol = sh.UsedRange.Column + sh.UsedRange.Columns.Count - 1
     If lastCol > 80 Then lastCol = 80
     For r = 1 To 30
         For c = 1 To lastCol
             If Norm(sh.Cells(r, c).Value) = "지원구분" Then
-                cType = c
+                colType = c
                 FindHeaderRow = r
                 Exit Function
             End If
